@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+.github
+.pytest_cache
+.venv_release_smoke
+# InSAR / ENVI / GDAL
+*.tif
+*.tiff
+*.img
+*.hdr
+*.vrt
+*.aux.xml
+*.SAFE/
+*.h5
+*.dat
+*.csv
+data/
+raw_data/
+results/
+*.zip
+*.tar.gz
