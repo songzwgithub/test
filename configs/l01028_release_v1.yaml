@@ -1,0 +1,35 @@
+reference_frame:
+  id: L01028_500m_fixed_quality_median_v1
+inputs:
+  authoritative_cache: outputs/canonical_inputs/L01028_bounded_memmaps_v1/static/phase4_harmonic_blocks_L01028_authoritative.h5
+  authoritative_cache_sha256: 3f4f714b5e10fe3dcd5a9e91a29de27e0157858137e76afddb12b2cd0fa6dce8
+  common_mask: outputs/canonical_inputs/L01028_bounded_memmaps_v1/static/comparison_common_mask.tif
+  common_mask_sha256: ff761a316e0a89a9121c439967df418f14585ae420f281d43671ebaf4740bd1f
+  fold_map: outputs/canonical_inputs/L01028_bounded_memmaps_v1/static/spatial_validation_blocks.tif
+  fold_map_sha256: d24dc63e65d3a1fa1a0e698620ba6d8e03fcf518a9a5ef0721c59374a1d46e3a
+  selected_rbf_design: outputs/canonical_inputs/L01028_bounded_memmaps_v1/rbf/selected_rbf_design.json
+  rbf_transform: outputs/canonical_inputs/L01028_bounded_memmaps_v1/rbf/rbf_transform.npy
+model:
+  name: bounded_G0_no_geology_L0_shared
+  rbf_dimension: 24
+  ske_min: 1.0e-8
+  ske_max: 0.05
+  lag_u_days: 10.0
+  lag_c_days: 55.77321162652655
+  lambda: 30.0
+optimizer:
+  budgets:
+    global: 100
+    gamma: 200
+    all: 300
+  convergence:
+    rel_objective_last10: 1.0e-5
+    rel_step_last10: 1.0e-4
+    scaled_gradient_rms: 1.0e-3
+storage:
+  semantics: confined seasonal elastic storage anomaly only
+  delayed_response_positive_lag_definition: y(t-lag)
+  uncertainty_name: 95% structural amplitude envelope
+release:
+  id: L01028_v1
+  output_path: outputs/releases/L01028_v1

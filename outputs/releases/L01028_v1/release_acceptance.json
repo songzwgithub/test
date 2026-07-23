@@ -1,0 +1,83 @@
+{
+  "active_attempt_named_source_count": 6,
+  "active_legacy_source_count": 1,
+  "active_python_file_count": 145,
+  "cache_hash_match": true,
+  "canonical_input_count": 1,
+  "ci_status": "configured",
+  "clean_venv_install_status": "passed",
+  "cli_smoke_test_status": "passed",
+  "common_mask_hash_match": true,
+  "delayed_positive_shift_status": "passed",
+  "documentation_status": "passed",
+  "duplicate_core_function_count": 0,
+  "failure_reasons": [
+    "active_legacy_source_count",
+    "active_attempt_named_source_count",
+    "root_pipeline_entry_count",
+    "old_executable_source_removed",
+    "old_outputs_removed"
+  ],
+  "final_refit_recalculation_status": "passed",
+  "formal_cv_recalculation_status": "passed",
+  "git_history_preserves_old_versions": true,
+  "license_status": "blocked_user_selection",
+  "manifest_hash_match": true,
+  "metrics": {
+    "coherent_amplitude_m3": 90387409.95126072,
+    "delayed_direction": "positive_delay",
+    "delayed_peak_shift_days": 55.77321162652652,
+    "local_amplitude_sum_m3": 91937693.49036154,
+    "peak_to_trough_m3": 180774819.90252143
+  },
+  "official_cli": "hengshui-insar",
+  "official_cli_count": 1,
+  "official_config_count": 1,
+  "official_python_package": "hengshui_insar",
+  "official_release_count": 1,
+  "old_executable_source_removed": false,
+  "old_outputs_removed": false,
+  "overall_status": "failed",
+  "phase_day_check": 9.635914213499886,
+  "products_status": "passed",
+  "pyproject_status": "passed",
+  "readme_status": "passed",
+  "root_pipeline_entry_count": 1,
+  "rows": [
+    {
+      "abs_diff": 0.0,
+      "actual_rmse_mm": 4.536152410535863,
+      "expected_rmse_mm": 4.536152410535863,
+      "fold_id": 1,
+      "status": "passed"
+    },
+    {
+      "abs_diff": 0.0,
+      "actual_rmse_mm": 4.144879395846749,
+      "expected_rmse_mm": 4.144879395846749,
+      "fold_id": 2,
+      "status": "passed"
+    },
+    {
+      "abs_diff": 0.0,
+      "actual_rmse_mm": 4.569405044130565,
+      "expected_rmse_mm": 4.569405044130565,
+      "fold_id": 3,
+      "status": "passed"
+    },
+    {
+      "abs_diff": 0.0,
+      "actual_rmse_mm": 4.696569337025768,
+      "expected_rmse_mm": 4.696569337025768,
+      "fold_id": 4,
+      "status": "passed"
+    }
+  ],
+  "scientific_metrics_unchanged": true,
+  "spatial_qa_v2_status": "passed",
+  "storage_recalculation_status": "passed",
+  "synthetic_or_placeholder_results_generated": false,
+  "tests_status": "passed",
+  "tracked_large_output_count": 0,
+  "wheel_build_status": "passed"
+}

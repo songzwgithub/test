@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hengshui-insar"
+version = "1.0.0"
+description = "Single-line release package for the Hengshui L01028 InSAR-groundwater inversion"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy",
+  "rasterio",
+  "pyproj",
+  "PyYAML",
+  "matplotlib",
+]
+
+[project.scripts]
+hengshui-insar = "hengshui_insar.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

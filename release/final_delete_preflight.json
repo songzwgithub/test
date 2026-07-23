@@ -1,0 +1,26 @@
+{
+  "canonical_required_paths_exist": {
+    "cache": true,
+    "common_mask": true,
+    "fold_map": true,
+    "rbf_transform": true,
+    "selected_rbf_design": true
+  },
+  "canonical_sha256_full_validation_completed": false,
+  "canonical_sha256_full_validation_note": "Full cache SHA was previously verified in final acceptance, but this deletion gate did not complete a fresh full-cache SHA due mounted-disk I/O time; no staging/deletion was performed.",
+  "compileall_status": "passed",
+  "delete_bytes": 34850321930,
+  "delete_file_count": 3137,
+  "deletion_staging_exists": false,
+  "forbidden_reference_check_passed": true,
+  "git_error": "fatal: not a git repository (or any parent up to mount point /mnt)\nStopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).",
+  "git_repository_ok": false,
+  "git_tag_pre_l01028_release_consolidation_exists": false,
+  "keep_file_count": 321,
+  "permanent_delete_performed": false,
+  "protected_delete_entries": 0,
+  "reason": "User condition 8 failed: this directory is not a valid Git repository and tag pre-l01028-release-consolidation cannot be verified. Therefore staging and deletion are prohibited.",
+  "staging_performed": false,
+  "status": "blocked_pre_staging",
+  "tests_status": "passed"
+}

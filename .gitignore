@@ -1,23 +1,43 @@
-# Python
-__pycache__/
-*.pyc
-venv/
-.github
-.pytest_cache
-.venv_release_smoke
-# InSAR / ENVI / GDAL
+# Scientific results and canonical runtime inputs
+outputs/**
+data/raw/**
+data/derived/**
+
+# Large scientific formats
 *.tif
 *.tiff
-*.img
-*.hdr
-*.vrt
-*.aux.xml
-*.SAFE/
 *.h5
+*.hdf5
 *.dat
-*.csv
-data/
-raw_data/
-results/
-*.zip
-*.tar.gz
+*.bin
+*.npy
+*.npz
+*.parquet
+*.pkl
+*.memmap
+
+# Python caches and builds
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# IDE and system
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Temporary and interrupted files
+*.tmp
+*.bak
+*.building
+*.partial
+*.lock
+deletion_staging/
