@@ -1,49 +1,68 @@
-# Scientific results and canonical runtime inputs
-outputs/**
-data/raw/**
-data/derived/**
 
+# --- 自动忽略超过 5MB 的文件（2026-07-23）---
+# ---- Auto appended by script ----
+# Gamma/SNAP 临时
+# IDE and system
 # Large scientific formats
-*.tif
-*.tiff
+# Python
+# Python caches and builds
+# Scientific results and canonical runtime inputs
+# Temporary and interrupted files
+# 系统
+# 遥感/干涉雷达常见大文件
+*.aux.xml
+*.bak
+*.bin
+*.building
+*.dat
+*.dem
+*.egg-info/
+*.geojson
+*.grd
 *.h5
 *.hdf5
-*.dat
-*.bin
+*.hdr
+*.he5
+*.kmz
+*.lock
+*.log
+*.memmap
+*.nc
 *.npy
 *.npz
 *.parquet
-*.pkl
-*.memmap
-
-# Python caches and builds
-__pycache__/
-*.py[cod]
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-.coverage
-htmlcov/
-build/
-dist/
-*.egg-info/
-
-# IDE and system
-.vscode/
-.idea/
-.DS_Store
-Thumbs.db
-
-# Temporary and interrupted files
-*.tmp
-*.bak
-*.building
 *.partial
-*.lock
+*.pkl
+*.py[cod]
+*.pyc
+*.rsc
+*.swp
+*.tar*
+*.tif
+*.tiff
+*.tmp
+*.vrt
+*.zip
+.DS_Store
+.coverage
+.idea/
+.ipynb_checkpoints/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.vscode/
+PROCESS/OUTPUT/
+Thumbs.db
+__pycache__/
+build/
+data/derived/**
+data/raw/**
 deletion_staging/
-
-# --- 自动忽略超过 5MB 的文件（2026-07-23）---
+dist/
+htmlcov/
+outputs/**
 outputs/canonical_inputs/L01028_bounded_memmaps_v1/static/phase4_harmonic_blocks_L01028_authoritative.h5
+outputs/releases/L01028_v1/products/Ske.tif
 outputs/releases/L01028_v1/products/eta_spatial_contribution.tif
 outputs/releases/L01028_v1/products/predicted_annual_imag_mm.tif
 outputs/releases/L01028_v1/products/predicted_annual_real_mm.tif
@@ -51,7 +70,6 @@ outputs/releases/L01028_v1/products/rbf_basis_row_norm.tif
 outputs/releases/L01028_v1/products/residual_amplitude_mm.tif
 outputs/releases/L01028_v1/products/residual_annual_imag_mm.tif
 outputs/releases/L01028_v1/products/residual_annual_real_mm.tif
-outputs/releases/L01028_v1/products/Ske.tif
 outputs/releases/L01028_v1/storage/confined_harmonic_storage/confined_storage_deformation_equivalent_delayed_imag_m3.tif
 outputs/releases/L01028_v1/storage/confined_harmonic_storage/confined_storage_deformation_equivalent_delayed_real_m3.tif
 outputs/releases/L01028_v1/storage/confined_harmonic_storage/confined_storage_harmonic_imag_m3.tif
@@ -59,3 +77,4 @@ outputs/releases/L01028_v1/storage/confined_harmonic_storage/confined_storage_ha
 outputs/releases/L01028_v1/storage/confined_harmonic_storage/confined_storage_local_amplitude_m3.tif
 outputs/releases/L01028_v1/storage/confined_harmonic_storage/confined_storage_peak_day_of_year.tif
 outputs/releases/L01028_v1/storage/confined_harmonic_storage/confined_storage_phase_days.tif
+temp/
