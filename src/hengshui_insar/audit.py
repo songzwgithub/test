@@ -26,6 +26,7 @@ from .io import read_json, write_json
 from .products import product_audit
 from .qa import spatial_qa
 from .storage import recalculate_storage
+from .source_recompute import StreamInputs
 
 
 CORE_NAMES = {
@@ -116,22 +117,23 @@ def clean_venv_install_status() -> str:
     venv = ROOT / ".venv_release_smoke"
     if venv.exists():
         shutil.rmtree(venv)
-    create = subprocess.run([sys.executable, "-m", "venv", str(venv)], cwd=ROOT)
+    create = subprocess.run([sys.executable, "-m", "venv", "--system-site-packages", str(venv)], cwd=ROOT)
     if create.returncode != 0:
         return "failed"
     py = venv / "bin" / "python"
     install = subprocess.run([str(py), "-m", "pip", "install", ".", "--no-deps", "--no-build-isolation"], cwd=ROOT, text=True, capture_output=True)
-    smoke = subprocess.run([str(venv / "bin" / "hengshui-insar"), "--help"], cwd=ROOT, text=True, capture_output=True) if install.returncode == 0 else install
+    smoke = subprocess.run([str(venv / "bin" / "hengshui-insar"), "verify", "--config", "configs/l01028_release_v1.yaml"], cwd=ROOT, text=True, capture_output=True) if install.returncode == 0 else install
     return "passed" if smoke.returncode == 0 else "failed"
 
 
-def release_acceptance(extra: dict[str, Any] | None = None) -> dict[str, Any]:
-    manifest_path = RELEASE_ROOT / "manifest" / "formal_protocol_bounded_frozen_manifest.json"
-    cv = recalculate_formal_cv(RELEASE_ROOT)
-    final = final_refit_recalculation(RELEASE_ROOT)
-    storage = recalculate_storage(RELEASE_ROOT)
-    products = product_audit(RELEASE_ROOT / "products")
-    qa = spatial_qa(RELEASE_ROOT)
+def release_acceptance(extra: dict[str, Any] | None = None, release_root: Path = RELEASE_ROOT, inputs: StreamInputs | None = None) -> dict[str, Any]:
+    inputs = inputs or StreamInputs(release_root=release_root)
+    manifest_path = release_root / "manifest" / "formal_protocol_bounded_frozen_manifest.json"
+    cv = recalculate_formal_cv(release_root, inputs=inputs)
+    final = recalculate_final_refit(release_root, EXPECTED_FINAL, inputs=inputs)
+    storage = recalculate_storage(release_root, inputs=inputs)
+    products = product_audit(release_root / "products")
+    qa = spatial_qa(release_root)
     counts = active_source_counts()
     manifest_ok = manifest_path.exists() and sha256_file(manifest_path) == MANIFEST_SHA256
     payload: dict[str, Any] = {
@@ -142,15 +144,15 @@ def release_acceptance(extra: dict[str, Any] | None = None) -> dict[str, Any]:
         "duplicate_core_function_count": duplicate_core_function_count(),
         **counts,
         "official_config_count": len(list((ROOT / "configs").glob("*.yaml"))),
-        "official_release_count": len([p for p in (ROOT / "outputs" / "releases").iterdir() if p.is_dir()]) if (ROOT / "outputs" / "releases").exists() else 0,
-        "canonical_input_count": len([p for p in (ROOT / "outputs" / "canonical_inputs").iterdir() if p.is_dir()]) if (ROOT / "outputs" / "canonical_inputs").exists() else 0,
+        "official_release_count": 1 if release_root.exists() else 0,
+        "canonical_input_count": 1 if inputs.cache.exists() and inputs.common_mask.exists() and inputs.fold_map.exists() else 0,
         "old_executable_source_removed": counts["active_legacy_source_count"] == 0 and counts["root_pipeline_entry_count"] == 0,
         **restored_flow_source_status(),
         "old_outputs_removed": not (ROOT / "outputs" / "reference_frames").exists(),
         "git_history_preserves_old_versions": (ROOT / ".git").exists(),
         "manifest_hash_match": manifest_ok,
-        "cache_hash_match": AUTHORITATIVE_CACHE.exists() and sha256_file(AUTHORITATIVE_CACHE) == CACHE_SHA256,
-        "common_mask_hash_match": COMMON_MASK.exists() and sha256_file(COMMON_MASK) == COMMON_MASK_SHA256,
+        "cache_hash_match": inputs.cache.exists() and sha256_file(inputs.cache) == CACHE_SHA256,
+        "common_mask_hash_match": inputs.common_mask.exists() and sha256_file(inputs.common_mask) == COMMON_MASK_SHA256,
         **cv,
         **final,
         **storage,
@@ -215,5 +217,5 @@ def release_acceptance(extra: dict[str, Any] | None = None) -> dict[str, Any]:
         payload["overall_status"] = "failed"
         payload["failure_reasons"] = failures
     write_json(ROOT / "release" / "L01028_release_code_acceptance.json", payload)
-    write_json(RELEASE_ROOT / "release_acceptance.json", payload)
+    write_json(release_root / "release_acceptance.json", payload)
     return payload

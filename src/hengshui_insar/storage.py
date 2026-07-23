@@ -18,8 +18,9 @@ def storage_summary(release_root: Path = RELEASE_ROOT) -> dict[str, Any]:
     return read_json(path)
 
 
-def recalculate_storage(release_root: Path = RELEASE_ROOT, tolerance: float = 1e-3) -> dict[str, Any]:
-    summary = recompute_storage_metrics(StreamInputs(release_root=release_root))
+def recalculate_storage(release_root: Path = RELEASE_ROOT, tolerance: float = 1e-3, inputs: StreamInputs | None = None) -> dict[str, Any]:
+    inputs = inputs or StreamInputs(release_root=release_root)
+    summary = recompute_storage_metrics(inputs)
     envelope_path = release_root / "storage" / "uncertainty" / "uncertainty_acceptance.json"
     envelope = read_json(envelope_path) if envelope_path.exists() else {}
     expected_envelope = {

@@ -23,60 +23,67 @@ def _load_config(args: argparse.Namespace):
 
 
 def cmd_verify(args: argparse.Namespace) -> dict:
-    from .constants import AUTHORITATIVE_CACHE, CACHE_SHA256, COMMON_MASK, COMMON_MASK_SHA256
     from .hashing import sha256_file
 
-    _load_config(args)
+    cfg = _load_config(args)
     return {
-        "cache_hash_match": sha256_file(AUTHORITATIVE_CACHE) == CACHE_SHA256,
-        "common_mask_hash_match": sha256_file(COMMON_MASK) == COMMON_MASK_SHA256,
+        "cache_hash_match": cfg.authoritative_cache.exists() and sha256_file(cfg.authoritative_cache) == cfg.authoritative_cache_sha256,
+        "common_mask_hash_match": cfg.common_mask.exists() and sha256_file(cfg.common_mask) == cfg.common_mask_sha256,
+        "fold_map_hash_match": cfg.fold_map.exists() and sha256_file(cfg.fold_map) == cfg.fold_map_sha256,
     }
 
 
 def cmd_invert(args: argparse.Namespace) -> dict:
-    from .constants import RELEASE_ROOT, ROOT
     from .cross_validation import recalculate_final_refit
 
-    _load_config(args)
-    if getattr(args, "recompute_only", False):
-        payload = recalculate_final_refit(RELEASE_ROOT)
+    cfg = _load_config(args)
+    from .source_recompute import stream_inputs_from_config
+
+    inputs = stream_inputs_from_config(cfg)
+    if not getattr(args, "optimize", False):
+        payload = recalculate_final_refit(cfg.release_root, inputs=inputs)
         payload["status"] = "final_refit_recomputed_from_saved_release_parameters"
-        payload["release_root"] = str(RELEASE_ROOT)
+        payload["release_root"] = str(cfg.release_root)
         return payload
     from .optimization import optimize_formal_inversion
 
-    output_dir = ROOT / getattr(args, "output_dir", "outputs/releases/L01028_v1/recomputed_inversion")
-    return optimize_formal_inversion(output_dir=output_dir, maxiter=int(args.maxiter))
+    output_dir = cfg.project_root / getattr(args, "output_dir", "outputs/releases/L01028_v1/recomputed_inversion")
+    budgets = dict(cfg.optimizer_budgets)
+    if int(args.maxiter) == 0:
+        budgets = {name: 0 for name in budgets}
+    else:
+        budgets["all"] = int(args.maxiter)
+    return optimize_formal_inversion(output_dir=output_dir, inputs=inputs, maxiter=int(args.maxiter), budgets=budgets)
 
 
 def cmd_cv(args: argparse.Namespace) -> dict:
-    from .constants import RELEASE_ROOT
     from .cross_validation import recalculate_formal_cv
 
-    _load_config(args)
-    return recalculate_formal_cv(RELEASE_ROOT)
+    cfg = _load_config(args)
+    from .source_recompute import stream_inputs_from_config
+
+    return recalculate_formal_cv(cfg.release_root, inputs=stream_inputs_from_config(cfg))
 
 
 def cmd_products(args: argparse.Namespace) -> dict:
-    from .constants import RELEASE_ROOT
     from .products import product_audit
 
-    _load_config(args)
-    return product_audit(RELEASE_ROOT / "products")
+    cfg = _load_config(args)
+    return product_audit(cfg.release_root / "products")
 
 
 def cmd_storage(args: argparse.Namespace) -> dict:
-    from .constants import RELEASE_ROOT
     from .storage import recalculate_storage
 
-    _load_config(args)
-    return recalculate_storage(RELEASE_ROOT)
+    cfg = _load_config(args)
+    from .source_recompute import stream_inputs_from_config
+
+    return recalculate_storage(cfg.release_root, inputs=stream_inputs_from_config(cfg))
 
 
 def cmd_figures(args: argparse.Namespace) -> dict:
-    from .constants import RELEASE_ROOT
-
-    _load_config(args)
+    cfg = _load_config(args)
+    RELEASE_ROOT = cfg.release_root
     figures = {
         "bounded_Ske_map": RELEASE_ROOT / "figures" / "bounded_Ske_map.png",
         "bounded_formal_cv_rmse": RELEASE_ROOT / "figures" / "bounded_formal_cv_rmse.png",
@@ -114,17 +121,21 @@ def _actual_check_statuses() -> dict:
 def cmd_audit(args: argparse.Namespace) -> dict:
     from .audit import release_acceptance
 
-    _load_config(args)
-    return release_acceptance(_actual_check_statuses())
+    cfg = _load_config(args)
+    from .source_recompute import stream_inputs_from_config
+
+    return release_acceptance(_actual_check_statuses(), release_root=cfg.release_root, inputs=stream_inputs_from_config(cfg))
 
 
 def cmd_all(args: argparse.Namespace) -> dict:
     from .audit import release_acceptance
 
-    _load_config(args)
+    cfg = _load_config(args)
+    from .source_recompute import stream_inputs_from_config
+
     return release_acceptance({
         **_actual_check_statuses(),
-    })
+    }, release_root=cfg.release_root, inputs=stream_inputs_from_config(cfg))
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -144,7 +155,7 @@ def build_parser() -> argparse.ArgumentParser:
         p = sub.add_parser(name)
         p.add_argument("--config", default="configs/l01028_release_v1.yaml")
         if name == "invert":
-            p.add_argument("--recompute-only", action="store_true", help="Only recompute metrics from saved release parameters; do not optimize.")
+            p.add_argument("--optimize", action="store_true", help="Run formal optimization. Without this flag, invert only recomputes saved final-fit metrics.")
             p.add_argument("--maxiter", type=int, default=300)
             p.add_argument("--output-dir", default="outputs/releases/L01028_v1/recomputed_inversion")
         p.set_defaults(func=func)

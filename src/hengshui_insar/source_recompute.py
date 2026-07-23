@@ -48,12 +48,30 @@ class StreamInputs:
     common_mask: Path = COMMON_MASK
     fold_map: Path = FOLD_MAP
     release_root: Path = RELEASE_ROOT
+    selected_rbf_design: Path | None = None
+    rbf_transform: Path | None = None
     rbf_dim: int = RBF_DIMENSION
+    observation_sigma_mm: float = OBSERVATION_SIGMA_MM
+
+
+def stream_inputs_from_config(config) -> StreamInputs:
+    return StreamInputs(
+        cache=config.authoritative_cache,
+        common_mask=config.common_mask,
+        fold_map=config.fold_map,
+        release_root=config.release_root,
+        selected_rbf_design=config.selected_rbf_design,
+        rbf_transform=config.rbf_transform,
+        rbf_dim=config.rbf_dimension,
+        observation_sigma_mm=config.observation_sigma_mm,
+    )
 
 
 def _load_rbf(inputs: StreamInputs) -> tuple[np.ndarray, float, str | None, np.ndarray]:
-    design = read_json(inputs.release_root.parents[1] / "canonical_inputs" / "L01028_bounded_memmaps_v1" / "rbf" / "selected_rbf_design.json")
-    transform = np.load(inputs.release_root.parents[1] / "canonical_inputs" / "L01028_bounded_memmaps_v1" / "rbf" / "rbf_transform.npy")
+    design_path = inputs.selected_rbf_design or inputs.release_root.parents[1] / "canonical_inputs" / "L01028_bounded_memmaps_v1" / "rbf" / "selected_rbf_design.json"
+    transform_path = inputs.rbf_transform or inputs.release_root.parents[1] / "canonical_inputs" / "L01028_bounded_memmaps_v1" / "rbf" / "rbf_transform.npy"
+    design = read_json(design_path)
+    transform = np.load(transform_path)
     centers = np.asarray(design["center_coordinates"], dtype=float)
     sigma_m = float(design["sigma_km"]) * 1000.0
     return centers, sigma_m, design.get("projected_crs"), np.asarray(transform[:, : inputs.rbf_dim], dtype=float)
@@ -301,7 +319,7 @@ def recompute_storage_metrics(inputs: StreamInputs = StreamInputs(), compare_ske
             common = mask_src.read(1, window=window).reshape(-1)[flat] == 1
             ske_tif = ske_src.read(1, window=window).reshape(-1)[flat].astype(float)
             h = h5["hc"][start : start + count].astype(float)
-            keep = common & np.isfinite(ske_tif) & np.isfinite(h).all(axis=1)
+            keep = common & np.isfinite(h).all(axis=1)
             if not keep.any():
                 continue
             rr = row + local_rows[keep]
@@ -315,14 +333,26 @@ def recompute_storage_metrics(inputs: StreamInputs = StreamInputs(), compare_ske
                 ys = np.asarray(ys, dtype=float)
             basis = apply_orthogonal_transform(gaussian_rbf(np.column_stack([xs, ys]), centers, sigma_m), transform)
             ske, _ = ske_and_derivative(eta0 + basis @ gamma, SKE_MIN, SKE_MAX)
+            keep2 = np.isfinite(ske)
+            if not keep2.all():
+                rr = rr[keep2]
+                cc = cc[keep2]
+                h_keep = h[keep][keep2]
+                ske_tif_keep = ske_tif[keep][keep2]
+                ske = ske[keep2]
+            else:
+                h_keep = h[keep]
+                ske_tif_keep = ske_tif[keep]
             if compare_ske_tif:
-                diff = ske.astype(float) - ske_tif[keep].astype(float)
-                max_ske_tif_abs_diff = max(max_ske_tif_abs_diff, float(np.max(np.abs(diff))))
-                rms_ske_tif_diff_num += float(np.sum(diff * diff))
-                rms_ske_tif_diff_n += int(diff.size)
+                valid_tif = np.isfinite(ske_tif_keep)
+                if valid_tif.any():
+                    diff = ske[valid_tif].astype(float) - ske_tif_keep[valid_tif].astype(float)
+                    max_ske_tif_abs_diff = max(max_ske_tif_abs_diff, float(np.max(np.abs(diff))))
+                    rms_ske_tif_diff_num += float(np.sum(diff * diff))
+                    rms_ske_tif_diff_n += int(diff.size)
             area = areas[rr]
-            real = ske * h[keep, 0] * area
-            imag = ske * h[keep, 1] * area
+            real = ske * h_keep[:, 0] * area
+            imag = ske * h_keep[:, 1] * area
             delayed_coeff = rotate_sin_cos_coefficients(np.column_stack([real, imag]), lag_c, ANNUAL_PERIOD_DAYS)
             regional += np.array([float(np.sum(real)), float(np.sum(imag))])
             delayed += np.array([float(np.sum(delayed_coeff[:, 0])), float(np.sum(delayed_coeff[:, 1]))])

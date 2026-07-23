@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+title: Hengshui InSAR-Groundwater L01028 Bounded Inversion
+message: "If you use this release, cite the associated Hengshui InSAR-groundwater study and this repository release."
+type: software
+version: 1.0.0
+date-released: 2026-07-23
+repository-code: "local-release"
+authors:
+  - name: Hengshui InSAR-Groundwater project contributors

@@ -38,12 +38,12 @@
   "extra_gates": {
     "Ske_max_bound": true,
     "Ske_min_bound": true,
-    "gamma_norm_finite": "True",
+    "gamma_norm_finite": true,
     "lag_c_days": true,
     "lag_u_days": true,
     "nonfinite_prediction_count": true,
     "parameter_count": true,
-    "prediction_abs_p99_finite": "True"
+    "prediction_abs_p99_finite": true
   },
   "failure_reasons": [],
   "final_refit_recalculation_status": "passed",

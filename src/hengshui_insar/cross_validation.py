@@ -45,9 +45,10 @@ def _expected_fold_metrics(release_root: Path, fold: int) -> dict[str, Any]:
     }
 
 
-def recalculate_formal_cv(release_root: Path = RELEASE_ROOT, tolerance: float = 1e-6) -> dict[str, Any]:
-    metrics = recompute_cv_metrics(StreamInputs(release_root=release_root))
-    partition = fold_partition_audit(StreamInputs(release_root=release_root))
+def recalculate_formal_cv(release_root: Path = RELEASE_ROOT, tolerance: float = 1e-8, inputs: StreamInputs | None = None) -> dict[str, Any]:
+    inputs = inputs or StreamInputs(release_root=release_root)
+    metrics = recompute_cv_metrics(inputs)
+    partition = fold_partition_audit(inputs)
     rows = []
     ok = partition["fold_partition_status"] == "passed"
     for fold, expected in EXPECTED_FOLD_RMSE.items():
@@ -96,19 +97,21 @@ def recalculate_formal_cv(release_root: Path = RELEASE_ROOT, tolerance: float = 
     }
 
 
-def recalculate_final_refit(release_root: Path = RELEASE_ROOT, expected: dict[str, float] | None = None, tolerance: float = 1e-6) -> dict[str, Any]:
+def recalculate_final_refit(release_root: Path = RELEASE_ROOT, expected: dict[str, float] | None = None, tolerance: float = 1e-8, inputs: StreamInputs | None = None) -> dict[str, Any]:
     from .constants import EXPECTED_FINAL
     from .source_recompute import recompute_final_metrics
 
     expected = expected or EXPECTED_FINAL
-    actual = recompute_final_metrics(StreamInputs(release_root=release_root))
+    inputs = inputs or StreamInputs(release_root=release_root)
+    actual = recompute_final_metrics(inputs)
     rows = {}
     ok = True
     mapping = {"rmse": "rmse", "mae": "mae", "Ske_min": "Ske_min", "Ske_p50": "Ske_p50", "Ske_max": "Ske_max", "Cu_global": "Cu_global"}
     for key, actual_key in mapping.items():
+        metric_tol = {"rmse": 1e-8, "mae": 1e-8, "Ske_min": 1e-10, "Ske_p50": 1e-9, "Ske_max": 1e-10, "Cu_global": 1e-13}[key]
         diff = abs(float(actual[actual_key]) - float(expected[key]))
         rows[key] = {"actual": actual[actual_key], "expected": expected[key], "abs_diff": diff}
-        ok = ok and diff <= tolerance
+        ok = ok and diff <= metric_tol
     extra_gates = {
         "lag_c_days": abs(float(actual["lag_c_days"]) - LAG_C_DAYS) <= 1e-12,
         "lag_u_days": abs(float(actual["lag_u_days"]) - LAG_U_DAYS) <= 1e-12,
