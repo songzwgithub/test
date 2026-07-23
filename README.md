@@ -1,6 +1,22 @@
 # Hengshui InSAR-Groundwater L01028 Bounded Inversion
 
-This repository contains the current formal L01028 bounded two-aquifer inversion products for the Hengshui InSAR-groundwater study.
+This repository contains the formal L01028 bounded two-aquifer inversion release for the Hengshui InSAR-groundwater study, plus recovered historical workflow code needed for provenance and full-flow reconstruction.
+
+## Start Here
+
+Use the maintained package and CLI for current release verification:
+
+```bash
+PYTHONPATH=src /home/s/miniconda3/envs/insar/bin/python -m hengshui_insar.cli verify --config configs/l01028_release_v1.yaml
+PYTHONPATH=src /home/s/miniconda3/envs/insar/bin/python -m hengshui_insar.cli cv --config configs/l01028_release_v1.yaml
+PYTHONPATH=src /home/s/miniconda3/envs/insar/bin/python -m hengshui_insar.cli invert --config configs/l01028_release_v1.yaml
+PYTHONPATH=src /home/s/miniconda3/envs/insar/bin/python -m hengshui_insar.cli storage --config configs/l01028_release_v1.yaml
+PYTHONPATH=src /home/s/miniconda3/envs/insar/bin/python -m hengshui_insar.cli audit --config configs/l01028_release_v1.yaml
+```
+
+The `audit` command can take several minutes because it performs source-level recomputation from real canonical inputs.
+
+Equivalent shell wrappers live in `commands/` for day-to-day use.
 
 ## Current Formal Result
 
@@ -11,20 +27,25 @@ This repository contains the current formal L01028 bounded two-aquifer inversion
 - Accepted bounded model: bounded Ske, G0 no geology, shared confined lag, fixed weakly identifiable unconfined lag.
 - Seasonal storage product: confined elastic seasonal storage anomaly only.
 
-## Formal Entrypoints
+## Directory Layout
 
-- Check bounded inversion: `python pipelines/run_bounded_inversion.py --stage check-only`
-- Seasonal storage: `python pipelines/run_seasonal_storage.py`
-- Publication figures: `python pipelines/build_publication_figures.py`
-- Final audit: `python pipelines/run_final_audit.py`
-- Tests: `/home/s/miniconda3/envs/insar/bin/python -m pytest tests -q`
+- `src/hengshui_insar/`: maintained release package and CLI.
+- `commands/`: human-facing shell wrappers for the maintained CLI.
+- `configs/l01028_release_v1.yaml`: single formal release config.
+- `outputs/canonical_inputs/L01028_bounded_memmaps_v1/`: canonical real-data inputs used by source-level recomputation.
+- `outputs/releases/L01028_v1/`: accepted release products, parameters, tables, figures, and audit artifacts.
+- `recovered_workflows/`: restored historical scripts, pipelines, plotting helpers, legacy code, and old root modules.
 
-The legacy root `run_pipeline.py` is disabled. Historical V2 code is preserved under `legacy/v2_unbounded/` for provenance only.
+More detail:
 
-## Data Note
-
-Large input rasters, HDF5 caches, and memmaps are expected in `outputs/` and are not portable source code assets. The canonical memmap view is under `outputs/canonical_inputs/L01028_bounded_memmaps_v1/`.
+- `docs/code_layout.md`
+- `docs/reproducibility_entrypoints.md`
+- `docs/legacy_module_map.md`
 
 ## Scientific Limits
 
-This is not total groundwater storage. It does not provide daily storage, unconfined storage, or independent external validation. The storage uncertainty is a 95% structural amplitude envelope, not a full probabilistic 95% confidence or credible interval.
+This release does not claim total groundwater storage. It does not provide unconfined storage or an independently validated daily storage field. The storage uncertainty is a 95% structural amplitude envelope, not a full probabilistic 95% confidence or credible interval.
+
+## Cleanup Policy
+
+Do not bulk-delete recovered scripts or root modules. Migrate one workflow at a time into `src/hengshui_insar/`, then rerun tests and `hengshui-insar audit`. Only after those checks pass should a historical file be deprecated or removed.

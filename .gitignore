@@ -41,3 +41,21 @@ Thumbs.db
 *.partial
 *.lock
 deletion_staging/
+
+# --- 自动忽略超过 5MB 的文件（2026-07-23）---
+outputs/canonical_inputs/L01028_bounded_memmaps_v1/static/phase4_harmonic_blocks_L01028_authoritative.h5
+outputs/releases/L01028_v1/products/eta_spatial_contribution.tif
+outputs/releases/L01028_v1/products/predicted_annual_imag_mm.tif
+outputs/releases/L01028_v1/products/predicted_annual_real_mm.tif
+outputs/releases/L01028_v1/products/rbf_basis_row_norm.tif
+outputs/releases/L01028_v1/products/residual_amplitude_mm.tif
+outputs/releases/L01028_v1/products/residual_annual_imag_mm.tif
+outputs/releases/L01028_v1/products/residual_annual_real_mm.tif
+outputs/releases/L01028_v1/products/Ske.tif
+outputs/releases/L01028_v1/storage/confined_harmonic_storage/confined_storage_deformation_equivalent_delayed_imag_m3.tif
+outputs/releases/L01028_v1/storage/confined_harmonic_storage/confined_storage_deformation_equivalent_delayed_real_m3.tif
+outputs/releases/L01028_v1/storage/confined_harmonic_storage/confined_storage_harmonic_imag_m3.tif
+outputs/releases/L01028_v1/storage/confined_harmonic_storage/confined_storage_harmonic_real_m3.tif
+outputs/releases/L01028_v1/storage/confined_harmonic_storage/confined_storage_local_amplitude_m3.tif
+outputs/releases/L01028_v1/storage/confined_harmonic_storage/confined_storage_peak_day_of_year.tif
+outputs/releases/L01028_v1/storage/confined_harmonic_storage/confined_storage_phase_days.tif

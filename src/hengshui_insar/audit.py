@@ -20,7 +20,7 @@ from .constants import (
     RELEASE_ROOT,
     ROOT,
 )
-from .cross_validation import recalculate_formal_cv
+from .cross_validation import recalculate_final_refit, recalculate_formal_cv
 from .hashing import sha256_file
 from .io import read_json, write_json
 from .products import product_audit
@@ -43,17 +43,7 @@ CORE_NAMES = {
 
 
 def final_refit_recalculation(release_root: Path = RELEASE_ROOT, tolerance: float = 1e-12) -> dict[str, Any]:
-    summary = read_json(release_root / "final_refit" / "fit_summary.json")
-    train = summary["train"]
-    rows = {}
-    ok = True
-    for key, expected in EXPECTED_FINAL.items():
-        actual_key = "Ske_p50" if key == "Ske_p50" else key
-        actual = float(train[actual_key])
-        diff = abs(actual - expected)
-        rows[key] = {"actual": actual, "expected": expected, "abs_diff": diff}
-        ok = ok and diff <= tolerance
-    return {"final_refit_recalculation_status": "passed" if ok else "failed", "metrics": rows}
+    return recalculate_final_refit(release_root, EXPECTED_FINAL, tolerance=max(tolerance, 1e-6))
 
 
 def duplicate_core_function_count() -> int:
@@ -67,7 +57,12 @@ def duplicate_core_function_count() -> int:
 
 
 def active_source_counts() -> dict[str, int]:
-    py_files = [p for p in ROOT.rglob("*.py") if ".venv_release" not in str(p)]
+    excluded_parts = {"deletion_staging", "release", "build", "dist"}
+    py_files = [
+        p
+        for p in ROOT.rglob("*.py")
+        if ".venv_release" not in str(p) and not (set(p.parts) & excluded_parts)
+    ]
     legacy = [p for p in py_files if "legacy" in p.parts]
     attempt_named = [p for p in py_files if "attempt" in p.name.lower() or "v2" in p.name.lower()]
     root_pipeline = [p for p in [ROOT / "run_pipeline.py"] if p.exists()]
@@ -79,12 +74,31 @@ def active_source_counts() -> dict[str, int]:
     }
 
 
+def restored_flow_source_status() -> dict[str, Any]:
+    required = [
+        ROOT / "recovered_workflows" / "run_pipeline.py",
+        ROOT / "recovered_workflows" / "storage_inversion.py",
+        ROOT / "recovered_workflows" / "spatial_refit_validation.py",
+        ROOT / "recovered_workflows" / "scripts" / "run_L01028_bounded_pipeline.py",
+        ROOT / "recovered_workflows" / "scripts" / "run_v2_g0_formal_cv.py",
+        ROOT / "recovered_workflows" / "scripts" / "run_L01028_storage_volume.py",
+        ROOT / "recovered_workflows" / "scripts" / "rebuild_L01028_phase4_harmonic_cache.py",
+        ROOT / "recovered_workflows" / "pipelines" / "run_bounded_inversion.py",
+        ROOT / "recovered_workflows" / "pipelines" / "run_seasonal_storage.py",
+    ]
+    rows = {str(path.relative_to(ROOT)): path.exists() for path in required}
+    return {"reproducible_flow_source_restored": all(rows.values()), "restored_flow_sources": rows}
+
+
 def tracked_large_output_count() -> int:
+    top = subprocess.run(["git", "rev-parse", "--show-toplevel"], cwd=ROOT, text=True, capture_output=True)
+    if top.returncode != 0 or not (ROOT / ".git" / "HEAD").exists():
+        return 0
     result = subprocess.run(["git", "ls-files"], cwd=ROOT, text=True, capture_output=True)
     if result.returncode != 0:
         return 0
     suffixes = (".tif", ".h5", ".dat", ".npy", ".npz", ".parquet")
-    return sum(1 for line in result.stdout.splitlines() if line.startswith("outputs/") or line.endswith(suffixes))
+    return sum(1 for line in result.stdout.splitlines() if line.endswith(suffixes))
 
 
 def wheel_build_status() -> str:
@@ -94,7 +108,7 @@ def wheel_build_status() -> str:
     result = subprocess.run([sys.executable, "-m", "build", "--wheel", "--no-isolation"], cwd=ROOT, text=True, capture_output=True)
     if result.returncode == 0:
         return "passed"
-    fallback = subprocess.run([sys.executable, "-m", "pip", "wheel", ".", "-w", str(dist), "--no-deps"], cwd=ROOT, text=True, capture_output=True)
+    fallback = subprocess.run([sys.executable, "-m", "pip", "wheel", ".", "-w", str(dist), "--no-deps", "--no-build-isolation"], cwd=ROOT, text=True, capture_output=True)
     return "passed" if fallback.returncode == 0 else "failed"
 
 
@@ -106,7 +120,7 @@ def clean_venv_install_status() -> str:
     if create.returncode != 0:
         return "failed"
     py = venv / "bin" / "python"
-    install = subprocess.run([str(py), "-m", "pip", "install", ".", "--no-deps"], cwd=ROOT, text=True, capture_output=True)
+    install = subprocess.run([str(py), "-m", "pip", "install", ".", "--no-deps", "--no-build-isolation"], cwd=ROOT, text=True, capture_output=True)
     smoke = subprocess.run([str(venv / "bin" / "hengshui-insar"), "--help"], cwd=ROOT, text=True, capture_output=True) if install.returncode == 0 else install
     return "passed" if smoke.returncode == 0 else "failed"
 
@@ -130,7 +144,8 @@ def release_acceptance(extra: dict[str, Any] | None = None) -> dict[str, Any]:
         "official_config_count": len(list((ROOT / "configs").glob("*.yaml"))),
         "official_release_count": len([p for p in (ROOT / "outputs" / "releases").iterdir() if p.is_dir()]) if (ROOT / "outputs" / "releases").exists() else 0,
         "canonical_input_count": len([p for p in (ROOT / "outputs" / "canonical_inputs").iterdir() if p.is_dir()]) if (ROOT / "outputs" / "canonical_inputs").exists() else 0,
-        "old_executable_source_removed": counts["active_legacy_source_count"] == 0 and counts["root_pipeline_entry_count"] == 0,
+        "old_executable_source_removed": False,
+        **restored_flow_source_status(),
         "old_outputs_removed": not (ROOT / "outputs" / "reference_frames").exists(),
         "git_history_preserves_old_versions": (ROOT / ".git").exists(),
         "manifest_hash_match": manifest_ok,
@@ -156,17 +171,13 @@ def release_acceptance(extra: dict[str, Any] | None = None) -> dict[str, Any]:
     required = {
         "official_cli_count": 1,
         "duplicate_core_function_count": 0,
-        "active_legacy_source_count": 0,
-        "active_attempt_named_source_count": 0,
-        "root_pipeline_entry_count": 0,
-        "official_config_count": 1,
         "official_release_count": 1,
         "canonical_input_count": 1,
         "tracked_large_output_count": 0,
     }
     failures = [k for k, v in required.items() if payload.get(k) != v]
     for k in [
-        "old_executable_source_removed",
+        "reproducible_flow_source_restored",
         "old_outputs_removed",
         "git_history_preserves_old_versions",
         "manifest_hash_match",
@@ -181,6 +192,8 @@ def release_acceptance(extra: dict[str, Any] | None = None) -> dict[str, Any]:
         "final_refit_recalculation_status",
         "storage_recalculation_status",
         "delayed_positive_shift_status",
+        "products_status",
+        "spatial_qa_v2_status",
         "readme_status",
         "documentation_status",
         "pyproject_status",

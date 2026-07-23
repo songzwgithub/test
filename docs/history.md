@@ -10,4 +10,4 @@ Key scientific changes:
 - The storage delayed-response sign was corrected so positive lag means `y(t-lag)`, giving a positive delayed peak shift of 55.77321162652652 days.
 - Storage uncertainty is reported as a 95% structural amplitude envelope, not a full probabilistic confidence or credible interval.
 
-No old executable source is retained in the active release tree.
+Recovered historical executable workflow source is retained under `recovered_workflows/` for provenance and full-flow reconstruction. The maintained release entrypoint remains `src/hengshui_insar/` and `commands/`.

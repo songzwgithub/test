@@ -1,0 +1,35 @@
+{
+  "error": "RuntimeError('post-staging validation failed: audit_status')",
+  "failure_reasons": [
+    "RuntimeError('post-staging validation failed: audit_status')"
+  ],
+  "overall_status": "failed",
+  "permanent_delete_status": "not_performed",
+  "post_staging_validation_results": {
+    "audit_status": "failed",
+    "audit_stderr_tail": "",
+    "audit_stdout_tail": "tation_status\": \"passed\",\n  \"duplicate_core_function_count\": 0,\n  \"failure_reasons\": [\n    \"tracked_large_output_count\"\n  ],\n  \"final_refit_recalculation_status\": \"passed\",\n  \"formal_cv_recalculation_status\": \"passed\",\n  \"git_history_preserves_old_versions\": true,\n  \"license_status\": \"blocked_user_selection\",\n  \"manifest_hash_match\": true,\n  \"metrics\": {\n    \"coherent_amplitude_m3\": 90387409.95126072,\n    \"delayed_direction\": \"positive_delay\",\n    \"delayed_peak_shift_days\": 55.77321162652652,\n    \"local_amplitude_sum_m3\": 91937693.49036154,\n    \"peak_to_trough_m3\": 180774819.90252143\n  },\n  \"official_cli\": \"hengshui-insar\",\n  \"official_cli_count\": 1,\n  \"official_config_count\": 1,\n  \"official_python_package\": \"hengshui_insar\",\n  \"official_release_count\": 1,\n  \"old_executable_source_removed\": true,\n  \"old_outputs_removed\": true,\n  \"overall_status\": \"failed\",\n  \"phase_day_check\": 9.635914213499886,\n  \"products_status\": \"passed\",\n  \"pyproject_status\": \"passed\",\n  \"readme_status\": \"passed\",\n  \"root_pipeline_entry_count\": 0,\n  \"rows\": [\n    {\n      \"abs_diff\": 0.0,\n      \"actual_rmse_mm\": 4.536152410535863,\n      \"expected_rmse_mm\": 4.536152410535863,\n      \"fold_id\": 1,\n      \"status\": \"passed\"\n    },\n    {\n      \"abs_diff\": 0.0,\n      \"actual_rmse_mm\": 4.144879395846749,\n      \"expected_rmse_mm\": 4.144879395846749,\n      \"fold_id\": 2,\n      \"status\": \"passed\"\n    },\n    {\n      \"abs_diff\": 0.0,\n      \"actual_rmse_mm\": 4.569405044130565,\n      \"expected_rmse_mm\": 4.569405044130565,\n      \"fold_id\": 3,\n      \"status\": \"passed\"\n    },\n    {\n      \"abs_diff\": 0.0,\n      \"actual_rmse_mm\": 4.696569337025768,\n      \"expected_rmse_mm\": 4.696569337025768,\n      \"fold_id\": 4,\n      \"status\": \"passed\"\n    }\n  ],\n  \"scientific_metrics_unchanged\": true,\n  \"spatial_qa_v2_status\": \"passed\",\n  \"storage_recalculation_status\": \"passed\",\n  \"synthetic_or_placeholder_results_generated\": false,\n  \"tests_status\": \"passed\",\n  \"tracked_large_output_count\": 2,\n  \"wheel_build_status\": \"passed\"\n}\n",
+    "build_stderr_tail": "WARNING: The directory '/home/s/.cache/pip' or its parent directory is not owned or is not writable by the current user. The cache has been disabled. Check the permissions and owner of that directory. If executing pip with sudo, you should use sudo's -H flag.\n",
+    "build_stdout_tail": "Processing ./.\n  Preparing metadata (pyproject.toml): started\n  Preparing metadata (pyproject.toml): finished with status 'done'\nBuilding wheels for collected packages: hengshui-insar\n  Building wheel for hengshui-insar (pyproject.toml): started\n  Building wheel for hengshui-insar (pyproject.toml): finished with status 'done'\n  Created wheel for hengshui-insar: filename=hengshui_insar-1.0.0-py3-none-any.whl size=14994 sha256=9db1e70bd17aacda2f6c758a0693be73dcce565241d84a3d1f6353e21f7f2900\n  Stored in directory: /tmp/pip-ephem-wheel-cache-qj8t8bb2/wheels/9c/b5/b0/8013b67807baca4c76274c424640476d97787cb861127dba4e\nSuccessfully built hengshui-insar\n",
+    "cache_hash_match": true,
+    "clean_venv_install_status": "passed",
+    "clean_venv_install_stderr_tail": "WARNING: The directory '/home/s/.cache/pip' or its parent directory is not owned or is not writable by the current user. The cache has been disabled. Check the permissions and owner of that directory. If executing pip with sudo, you should use sudo's -H flag.\nWARNING: The directory '/home/s/.cache/pip' or its parent directory is not owned or is not writable by the current user. The cache has been disabled. Check the permissions and owner of that directory. If executing pip with sudo, you should use sudo's -H flag.\n",
+    "clean_venv_install_stdout_tail": "Processing ./dist/hengshui_insar-1.0.0-py3-none-any.whl\nInstalling collected packages: hengshui-insar\nSuccessfully installed hengshui-insar-1.0.0\nName: hengshui-insar\nVersion: 1.0.0\nSummary: Single-line release package for the Hengshui L01028 InSAR-groundwater inversion\nHome-page: \nAuthor: \nAuthor-email: \nLicense: \nLocation: /tmp/hengshui_release_venv/lib/python3.10/site-packages\nRequires: matplotlib, numpy, pyproj, PyYAML, rasterio\nRequired-by: \n",
+    "cli_help_status": "passed",
+    "cli_help_stderr_tail": "",
+    "common_mask_hash_match": true,
+    "compileall_status": "passed",
+    "delayed_positive_shift_status": "passed",
+    "final_refit_recalculation_status": "passed",
+    "formal_cv_recalculation_status": "passed",
+    "manifest_hash_match": true,
+    "scientific_metrics_unchanged": true,
+    "storage_source_recalculation_status": "passed",
+    "tests_output": "............                                                             [100%]\n12 passed in 79.78s (0:01:19)\n",
+    "tests_status": "passed",
+    "verify_status": "passed",
+    "wheel_build_status": "passed"
+  },
+  "restored_from_staging": true,
+  "traceback": "Traceback (most recent call last):\n  File \"/mnt/f/hengshui-gamma/sbas/dolphin/insar_hengshui_gw/Hengshui_InSAR_Inversion/release/run_final_cleanup.py\", line 322, in main\n    raise RuntimeError(\"post-staging validation failed: \" + \", \".join(failures))\nRuntimeError: post-staging validation failed: audit_status\n"
+}

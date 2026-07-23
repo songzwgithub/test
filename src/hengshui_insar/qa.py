@@ -13,8 +13,8 @@ def spatial_qa(release_root: Path) -> dict[str, Any]:
     if qa.exists():
         return read_json(qa)
     return {
-        "spatial_qa_v2_status": "passed",
-        "basis_row_norm_status": "passed",
-        "false_support_distance_product_removed": True,
-        "real_distance_product_status": "not_available_not_fabricated",
+        "spatial_qa_v2_status": "failed_missing_qa_evidence",
+        "basis_row_norm_status": "missing",
+        "false_support_distance_product_removed": None,
+        "real_distance_product_status": "missing",
     }

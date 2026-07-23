@@ -1,0 +1,28 @@
+year,metric,value,unit,observation_system,center_location,contour_threshold,funnel_area,source_status
+2010,city_deep_mean_depth,60.59,m,manual_city,,, ,verified
+2011,city_deep_mean_depth,56.93,m,manual_city,,, ,verified
+2012,city_deep_mean_depth,56.71,m,manual_city,,, ,verified
+2013,city_deep_mean_depth,59.48,m,manual_city,,, ,verified
+2014,city_deep_mean_depth,70.52,m,manual_city,,, ,verified
+2015,city_deep_mean_depth,67.20,m,manual_city,,, ,verified
+2016,city_deep_mean_depth,66.70,m,manual_city,,, ,verified
+2017,city_deep_mean_depth,66.02,m,manual_city,,, ,verified
+2018,city_deep_mean_depth,71.60,m,manual_city,,, ,verified
+2019,city_deep_mean_depth,76.28,m,manual_city,,, ,verified
+2020,city_deep_mean_depth,74.68,m,manual_city,,, ,verified
+2010,funnel_center_depth,83.95,m,manual_funnel,衡水市东滏阳,,,verified
+2011,funnel_center_depth,80.66,m,manual_funnel,衡水市开发区水源地,,,verified
+2012,funnel_center_depth,83.52,m,manual_funnel,衡水市开发区水源地,,,verified
+2013,funnel_center_depth,84.70,m,manual_funnel,衡水市开发区水源地,,,verified
+2014,funnel_center_depth,97.08,m,manual_funnel,景县杜桥,85,1927,verified
+2015,funnel_center_depth,104.10,m,manual_funnel,景县八里庄,90,1250,verified
+2016,funnel_center_depth,100.80,m,manual_funnel,景县八里庄,90,578.2,verified
+2017,funnel_center_depth,102.16,m,manual_funnel,景县八里庄,90,411,verified
+2018,funnel_center_depth,103.92,m,manual_funnel,景县八里庄,90,508,verified
+2019,funnel_center_depth,110.82,m,manual_funnel,景县八里庄,95,842,verified
+2020,funnel_center_depth,95.63,m,manual_funnel,故城县小屯,95,648,verified
+2020,funnel_center_head,-86.55,m,automatic_funnel,景县留智庙,-70,1838,verified
+2021,funnel_center_head,-81.50,m,automatic_funnel,景县马小旺,-70,251.61,verified
+2022,funnel_center_head,-68.58,m,automatic_funnel,景县马小旺,-70,,verified
+2023,funnel_center_head,-71.92,m,automatic_funnel,景县马小旺,-70,7.05,verified
+2024,funnel_center_head,-67.89,m,automatic_funnel,留智庙,-70,0,verified
