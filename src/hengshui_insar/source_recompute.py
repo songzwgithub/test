@@ -31,9 +31,12 @@ from .constants import (
     RBF_DIMENSION,
     SKE_MAX,
     SKE_MIN,
+    FOLD_MAP_SHA256,
+    COMMON_MASK_SHA256,
 )
 from .harmonics import phase_days, rotate_sin_cos_coefficients
 from .io import read_json
+from .hashing import sha256_file
 from .rbf import apply_orthogonal_transform, gaussian_rbf
 
 OBSERVATION_SIGMA_MM = 5.0
@@ -143,6 +146,8 @@ def evaluate_parameters(theta: np.ndarray, inputs: StreamInputs, fold_id: int | 
     ske_min = np.inf
     ske_max = -np.inf
     ske_values: list[np.ndarray] = []
+    pred_abs_values: list[np.ndarray] = []
+    upper_count = 0
     for obs, hc, hu, basis in iter_model_blocks(inputs, fold_id, split):
         eta = eta0 + basis @ gamma
         ske, _ = ske_and_derivative(eta, SKE_MIN, SKE_MAX)
@@ -162,7 +167,10 @@ def evaluate_parameters(theta: np.ndarray, inputs: StreamInputs, fold_id: int | 
             ske_min = min(ske_min, float(np.min(s)))
             ske_max = max(ske_max, float(np.max(s)))
             ske_values.append(s.astype("float32", copy=False))
+            pred_abs_values.append(np.max(np.abs(pred[finite]), axis=1).astype("float32", copy=False))
+            upper_count += int(np.count_nonzero((SKE_MAX - s) <= 1e-6))
     ske_sample = np.concatenate(ske_values) if ske_values else np.asarray([], dtype="float32")
+    pred_abs = np.concatenate(pred_abs_values) if pred_abs_values else np.asarray([], dtype="float32")
     return {
         "pixel_count": pixel_count,
         "observation_count": ncoef,
@@ -171,12 +179,66 @@ def evaluate_parameters(theta: np.ndarray, inputs: StreamInputs, fold_id: int | 
         "Ske_min": None if not np.isfinite(ske_min) else float(ske_min),
         "Ske_p50": None if ske_sample.size == 0 else float(np.percentile(ske_sample, 50)),
         "Ske_max": None if not np.isfinite(ske_max) else float(ske_max),
+        "upper_bound_fraction": float(upper_count / max(pixel_count, 1)),
+        "prediction_abs_p99": None if pred_abs.size == 0 else float(np.percentile(pred_abs, 99)),
         "Cu_global": cu,
         "lag_c_days": lag_c,
         "lag_u_days": LAG_U_DAYS,
         "gamma_norm": float(np.linalg.norm(gamma)),
         "nonfinite_prediction_count": nonfinite,
         "source_level_recalculation": True,
+    }
+
+
+def fold_partition_audit(inputs: StreamInputs = StreamInputs()) -> dict[str, Any]:
+    common = 0
+    fold_counts = {1: 0, 2: 0, 3: 0, 4: 0}
+    development = 0
+    undefined = 0
+    with rasterio.open(inputs.common_mask) as ms, rasterio.open(inputs.fold_map) as fs:
+        same_geometry = (
+            ms.width == fs.width
+            and ms.height == fs.height
+            and ms.transform == fs.transform
+            and str(ms.crs) == str(fs.crs)
+        )
+        for _, window in ms.block_windows(1):
+            m = ms.read(1, window=window) == 1
+            f = fs.read(1, window=window)
+            common += int(m.sum())
+            development += int((m & (f == 0)).sum())
+            valid_fold = np.isin(f, [0, 1, 2, 3, 4])
+            undefined += int((m & ~valid_fold).sum())
+            for fold in fold_counts:
+                fold_counts[fold] += int((m & (f == fold)).sum())
+    rows = []
+    ok = same_geometry and undefined == 0 and sum(fold_counts.values()) + development == common
+    for fold in sorted(fold_counts):
+        train = common - fold_counts[fold]
+        val = fold_counts[fold]
+        rows.append(
+            {
+                "fold_id": fold,
+                "training_pixel_count": train,
+                "validation_pixel_count": val,
+                "training_validation_intersection_count": 0,
+                "training_validation_union_count": common,
+                "status": "passed" if train + val == common else "failed",
+            }
+        )
+        ok = ok and train + val == common
+    return {
+        "fold_partition_status": "passed" if ok else "failed",
+        "common_mask_pixel_count": common,
+        "fold_counts": fold_counts,
+        "development_fold0_pixel_count": development,
+        "undefined_fold_value_count": undefined,
+        "allowed_fold_values": [0, 1, 2, 3, 4],
+        "formal_validation_fold_values": [1, 2, 3, 4],
+        "common_mask_hash_match": sha256_file(inputs.common_mask) == COMMON_MASK_SHA256,
+        "fold_map_hash_match": sha256_file(inputs.fold_map) == FOLD_MAP_SHA256,
+        "same_geometry": same_geometry,
+        "rows": rows,
     }
 
 
@@ -206,13 +268,22 @@ def geodesic_pixel_area_rows(transform: rasterio.Affine, width: int, height: int
     return areas
 
 
-def recompute_storage_metrics(inputs: StreamInputs = StreamInputs()) -> dict[str, Any]:
+def recompute_storage_metrics(inputs: StreamInputs = StreamInputs(), compare_ske_tif: bool = True) -> dict[str, Any]:
     ske_path = inputs.release_root / "products" / "Ske.tif"
+    theta = load_release_parameters(inputs.release_root, None)
+    eta0, gamma, _cu, lag_c = decode_parameters(theta, inputs.rbf_dim)
     regional = np.zeros(2, dtype=float)
     delayed = np.zeros(2, dtype=float)
     local_amplitude = 0.0
     valid_count = 0
+    max_ske_tif_abs_diff = 0.0
+    rms_ske_tif_diff_num = 0.0
+    rms_ske_tif_diff_n = 0
     with rasterio.open(ske_path) as ske_src, rasterio.open(inputs.common_mask) as mask_src, h5py.File(inputs.cache, "r") as h5:
+        centers, sigma_m, target_crs, transform = _load_rbf(inputs)
+        transformer = None
+        if target_crs and mask_src.crs and str(mask_src.crs) != str(target_crs):
+            transformer = Transformer.from_crs(mask_src.crs, target_crs, always_xy=True)
         areas = geodesic_pixel_area_rows(ske_src.transform, ske_src.width, ske_src.height)
         for bi in range(len(h5["block_start"])):
             start = int(h5["block_start"][bi])
@@ -228,16 +299,31 @@ def recompute_storage_metrics(inputs: StreamInputs = StreamInputs()) -> dict[str
             local_rows = flat // width
             local_cols = flat % width
             common = mask_src.read(1, window=window).reshape(-1)[flat] == 1
-            ske = ske_src.read(1, window=window).reshape(-1)[flat].astype(float)
+            ske_tif = ske_src.read(1, window=window).reshape(-1)[flat].astype(float)
             h = h5["hc"][start : start + count].astype(float)
-            keep = common & np.isfinite(ske) & np.isfinite(h).all(axis=1)
+            keep = common & np.isfinite(ske_tif) & np.isfinite(h).all(axis=1)
             if not keep.any():
                 continue
             rr = row + local_rows[keep]
+            cc = col + local_cols[keep]
+            xs, ys = xy(mask_src.transform, rr, cc, offset="center")
+            xs = np.asarray(xs, dtype=float)
+            ys = np.asarray(ys, dtype=float)
+            if transformer is not None:
+                xs, ys = transformer.transform(xs, ys)
+                xs = np.asarray(xs, dtype=float)
+                ys = np.asarray(ys, dtype=float)
+            basis = apply_orthogonal_transform(gaussian_rbf(np.column_stack([xs, ys]), centers, sigma_m), transform)
+            ske, _ = ske_and_derivative(eta0 + basis @ gamma, SKE_MIN, SKE_MAX)
+            if compare_ske_tif:
+                diff = ske.astype(float) - ske_tif[keep].astype(float)
+                max_ske_tif_abs_diff = max(max_ske_tif_abs_diff, float(np.max(np.abs(diff))))
+                rms_ske_tif_diff_num += float(np.sum(diff * diff))
+                rms_ske_tif_diff_n += int(diff.size)
             area = areas[rr]
-            real = ske[keep] * h[keep, 0] * area
-            imag = ske[keep] * h[keep, 1] * area
-            delayed_coeff = rotate_sin_cos_coefficients(np.column_stack([real, imag]), LAG_C_DAYS, ANNUAL_PERIOD_DAYS)
+            real = ske * h[keep, 0] * area
+            imag = ske * h[keep, 1] * area
+            delayed_coeff = rotate_sin_cos_coefficients(np.column_stack([real, imag]), lag_c, ANNUAL_PERIOD_DAYS)
             regional += np.array([float(np.sum(real)), float(np.sum(imag))])
             delayed += np.array([float(np.sum(delayed_coeff[:, 0])), float(np.sum(delayed_coeff[:, 1]))])
             local_amplitude += float(np.sum(np.hypot(real, imag)))
@@ -258,5 +344,9 @@ def recompute_storage_metrics(inputs: StreamInputs = StreamInputs()) -> dict[str
         "phase_days": phi,
         "delayed_peak_shift_days": float(shift),
         "delayed_peak_shift_sign": "positive_delay" if shift > 0 else "negative_or_zero_delay",
+        "lag_c_days_from_final_parameters": lag_c,
+        "Ske_tif_max_abs_diff": max_ske_tif_abs_diff,
+        "Ske_tif_rms_diff": float(np.sqrt(rms_ske_tif_diff_num / max(rms_ske_tif_diff_n, 1))),
+        "Ske_tif_comparison_count": rms_ske_tif_diff_n,
         "source_level_recalculation": True,
     }

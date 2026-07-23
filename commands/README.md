@@ -10,8 +10,9 @@ equivalent `hengshui-insar` subcommands instead of browsing historical scripts.
 - `./commands/source_final_refit.sh`
 - `./commands/source_storage.sh`
 - `./commands/full_audit.sh`
+- `./commands/run_inversion_optimization.sh --maxiter 300`
 
 ## Historical Workflows
 
-Historical commands are grouped under `recovered_workflows/`. Use them only for
-provenance reconstruction or method development, not routine release checks.
+Historical workflow code is not active release code. A local external recovery
+copy may exist at `/tmp/hengshui_recovery_external/`.

@@ -42,16 +42,17 @@ PYTHONPATH=src /home/s/miniconda3/envs/insar/bin/python -m hengshui_insar.cli au
 
 Runs tests/build/install checks plus source-level CV, final refit, storage, product, and QA gates. This can take several minutes because it reads real data.
 
-## Historical Full-Workflow Scripts
+## Formal Optimization
 
-Use these only when reproducing the original development pipeline or investigating provenance:
+```bash
+./commands/run_inversion_optimization.sh --maxiter 300
+```
 
-- `recovered_workflows/scripts/run_L01028_bounded_pipeline.py`
-- `recovered_workflows/scripts/run_v2_g0_formal_cv.py`
-- `recovered_workflows/scripts/run_L01028_storage_volume.py`
-- `recovered_workflows/scripts/rebuild_L01028_phase4_harmonic_cache.py`
-- `recovered_workflows/pipelines/run_bounded_inversion.py`
-- `recovered_workflows/pipelines/run_seasonal_storage.py`
-- `recovered_workflows/run_pipeline.py`
+This executes the maintained bounded objective and analytical gradient in
+`src/hengshui_insar/optimization.py`. The source-final-refit command above uses
+`--recompute-only` and does not optimize.
 
-Many historical scripts still reference pre-cleanup output paths. Prefer the maintained CLI unless you are intentionally reconstructing historical intermediate folders.
+## Historical Workflows
+
+Historical workflow scripts are outside the active release tree. A local external
+copy may exist at `/tmp/hengshui_recovery_external/` for emergency inspection.

@@ -1,6 +1,7 @@
 
 # --- 自动忽略超过 5MB 的文件（2026-07-23）---
 # ---- Auto appended by script ----
+# Auto
 # Gamma/SNAP 临时
 # IDE and system
 # Large scientific formats
@@ -39,6 +40,7 @@
 *.swp
 *.tar*
 *.tif
+*.tif *.tiff *.h5 *.grd *.vrt *.nc *.dem *.zip
 *.tiff
 *.tmp
 *.vrt
@@ -51,9 +53,11 @@
 .pytest_cache/
 .ruff_cache/
 .vscode/
+PROCESS/ OUTPUT/ temp/
 PROCESS/OUTPUT/
 Thumbs.db
 __pycache__/
+__pycache__/ *.pyc
 build/
 data/derived/**
 data/raw/**

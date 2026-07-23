@@ -75,19 +75,19 @@ def active_source_counts() -> dict[str, int]:
 
 
 def restored_flow_source_status() -> dict[str, Any]:
-    required = [
-        ROOT / "recovered_workflows" / "run_pipeline.py",
-        ROOT / "recovered_workflows" / "storage_inversion.py",
-        ROOT / "recovered_workflows" / "spatial_refit_validation.py",
-        ROOT / "recovered_workflows" / "scripts" / "run_L01028_bounded_pipeline.py",
-        ROOT / "recovered_workflows" / "scripts" / "run_v2_g0_formal_cv.py",
-        ROOT / "recovered_workflows" / "scripts" / "run_L01028_storage_volume.py",
-        ROOT / "recovered_workflows" / "scripts" / "rebuild_L01028_phase4_harmonic_cache.py",
-        ROOT / "recovered_workflows" / "pipelines" / "run_bounded_inversion.py",
-        ROOT / "recovered_workflows" / "pipelines" / "run_seasonal_storage.py",
+    forbidden = [
+        ROOT / "recovered_workflows",
+        ROOT / "legacy",
+        ROOT / "pipelines",
+        ROOT / "scripts",
+        ROOT / "plotting",
+        ROOT / "run_pipeline.py",
+        ROOT / "storage_inversion.py",
+        ROOT / "spatial_refit_validation.py",
+        ROOT / "release" / "recovery",
     ]
-    rows = {str(path.relative_to(ROOT)): path.exists() for path in required}
-    return {"reproducible_flow_source_restored": all(rows.values()), "restored_flow_sources": rows}
+    rows = {str(path.relative_to(ROOT)): path.exists() for path in forbidden}
+    return {"single_release_source_layout": not any(rows.values()), "forbidden_active_release_paths": rows}
 
 
 def tracked_large_output_count() -> int:
@@ -144,7 +144,7 @@ def release_acceptance(extra: dict[str, Any] | None = None) -> dict[str, Any]:
         "official_config_count": len(list((ROOT / "configs").glob("*.yaml"))),
         "official_release_count": len([p for p in (ROOT / "outputs" / "releases").iterdir() if p.is_dir()]) if (ROOT / "outputs" / "releases").exists() else 0,
         "canonical_input_count": len([p for p in (ROOT / "outputs" / "canonical_inputs").iterdir() if p.is_dir()]) if (ROOT / "outputs" / "canonical_inputs").exists() else 0,
-        "old_executable_source_removed": False,
+        "old_executable_source_removed": counts["active_legacy_source_count"] == 0 and counts["root_pipeline_entry_count"] == 0,
         **restored_flow_source_status(),
         "old_outputs_removed": not (ROOT / "outputs" / "reference_frames").exists(),
         "git_history_preserves_old_versions": (ROOT / ".git").exists(),
@@ -171,13 +171,18 @@ def release_acceptance(extra: dict[str, Any] | None = None) -> dict[str, Any]:
     required = {
         "official_cli_count": 1,
         "duplicate_core_function_count": 0,
+        "active_legacy_source_count": 0,
+        "active_attempt_named_source_count": 0,
+        "root_pipeline_entry_count": 0,
+        "official_config_count": 1,
         "official_release_count": 1,
         "canonical_input_count": 1,
         "tracked_large_output_count": 0,
     }
     failures = [k for k, v in required.items() if payload.get(k) != v]
     for k in [
-        "reproducible_flow_source_restored",
+        "single_release_source_layout",
+        "old_executable_source_removed",
         "old_outputs_removed",
         "git_history_preserves_old_versions",
         "manifest_hash_match",

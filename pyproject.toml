@@ -13,6 +13,8 @@ dependencies = [
   "pyproj",
   "PyYAML",
   "matplotlib",
+  "h5py",
+  "scipy",
 ]
 
 [project.scripts]
